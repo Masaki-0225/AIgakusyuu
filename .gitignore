@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Gradle
+backend/.gradle/
+backend/build/
+
+# Logs
+*.log
+
+# Local test directories
+github-test/
