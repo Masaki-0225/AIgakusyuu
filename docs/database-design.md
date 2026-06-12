@@ -64,6 +64,9 @@ erDiagram
 
 ## 補足
 
-- データベースエンジンは SQLite を使用する
-- 初回起動時に boards・columns テーブルの初期データ（固定の3列）をシードとして挿入する
+- データベースエンジンは PostgreSQL 15 を使用する
+- マイグレーションは Flyway で管理し、Spring Boot 起動時に自動実行される
+  - `V1__create_tables.sql`: boards / columns / cards テーブル作成
+  - `V2__insert_initial_data.sql`: board 1件・column 3件（未着手/進行中/完了）の初期データ投入
+- 初期データ挿入後は boards・columns テーブルは追加・変更しない前提（固定3列）
 - 詳細なインデックス設計は実装フェーズで定義する
