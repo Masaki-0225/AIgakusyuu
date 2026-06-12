@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>MyTrelloアプリ１号</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #1a365d;
+      color: #fff;
+      padding: 14px 24px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      flex-shrink: 0;
+    }
+
+    /* ── Board ── */
+    .board {
+      display: flex;
+      gap: 16px;
+      padding: 20px 24px;
+      flex: 1;
+      align-items: flex-start;
+    }
+
+    /* ── Column ── */
+    .column {
+      background: #edf2f7;
+      border-radius: 8px;
+      width: 280px;
+      min-width: 280px;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 90px);
+    }
+
+    .column-header {
+      padding: 12px 14px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .column-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #2d3748;
+    }
+
+    .column-count {
+      background: #cbd5e0;
+      color: #4a5568;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 1px 7px;
+    }
+
+    /* ── Sort buttons ── */
+    .sort-btns {
+      display: flex;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .sort-btn {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+      border: 1px solid #cbd5e0;
+      background: #fff;
+      color: #718096;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .sort-btn:hover { background: #e2e8f0; color: #2d3748; }
+    .sort-btn.active { background: #2b6cb0; color: #fff; border-color: #2b6cb0; }
+
+    .card-list {
+      padding: 4px 8px;
+      flex: 1;
+      overflow-y: auto;
+      min-height: 40px;
+    }
+
+    .card-list.drag-over-col {
+      background: #bee3f8;
+      border-radius: 6px;
+    }
+
+    /* ドロップ挿入インジケーター */
+    .drop-placeholder {
+      height: 4px;
+      background: #4299e1;
+      border-radius: 2px;
+      margin-bottom: 8px;
+      pointer-events: none;
+    }
+
+    .add-btn {
+      margin: 8px;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: #4a5568;
+      font-size: 0.88rem;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s;
+    }
+    .add-btn:hover { background: #e2e8f0; color: #2d3748; }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+      cursor: grab;
+      transition: box-shadow 0.15s, transform 0.15s;
+      position: relative;
+      user-select: none;
+    }
+    .card:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.15); transform: translateY(-1px); }
+    .card.dragging { opacity: 0.35; cursor: grabbing; transform: none; }
+
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 6px;
+      padding-right: 24px;
+      line-height: 1.4;
+    }
+
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+    .badge-high   { background: #fed7d7; color: #c53030; }
+    .badge-medium { background: #fefcbf; color: #b7791f; }
+    .badge-low    { background: #c6f6d5; color: #276749; }
+
+    .due-date {
+      font-size: 0.75rem;
+      color: #718096;
+    }
+    .due-date.overdue { color: #c53030; font-weight: 600; }
+
+    .delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: none;
+      border: none;
+      color: #cbd5e0;
+      font-size: 1rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .delete-btn:hover { color: #e53e3e; background: #fff5f5; }
+
+    /* ── Modal overlay ── */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 10px;
+      padding: 28px 32px;
+      width: 420px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    }
+
+    .modal h2 {
+      font-size: 1.1rem;
+      color: #1a365d;
+      margin-bottom: 20px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 5px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      color: #2d3748;
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus { border-color: #4299e1; }
+
+    .form-group textarea { resize: vertical; min-height: 72px; }
+
+    .required { color: #e53e3e; margin-left: 2px; }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .btn {
+      padding: 8px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-cancel { background: #edf2f7; color: #4a5568; }
+    .btn-cancel:hover { background: #e2e8f0; }
+    .btn-save { background: #2b6cb0; color: #fff; }
+    .btn-save:hover { background: #2c5282; }
+
+    .error-msg {
+      color: #c53030;
+      font-size: 0.8rem;
+      margin-top: 4px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>MyTrelloアプリ１号</header>
+
+<div class="board">
+  <!-- 未着手：追加ボタンあり -->
+  <div class="column" id="col-todo" data-column-id="todo">
+    <div class="column-header">
+      <span class="column-title">未着手</span>
+      <span class="column-count" id="count-todo">0</span>
+      <div class="sort-btns">
+        <button class="sort-btn" data-col="todo" data-sort="priority" onclick="toggleSort('todo','priority')">優先度</button>
+        <button class="sort-btn" data-col="todo" data-sort="due"      onclick="toggleSort('todo','due')">期日</button>
+      </div>
+    </div>
+    <div class="card-list" id="list-todo"></div>
+    <button class="add-btn" onclick="openModal('add','todo')">＋ 追加</button>
+  </div>
+
+  <!-- 進行中：追加ボタンなし -->
+  <div class="column" id="col-doing" data-column-id="doing">
+    <div class="column-header">
+      <span class="column-title">進行中</span>
+      <span class="column-count" id="count-doing">0</span>
+      <div class="sort-btns">
+        <button class="sort-btn" data-col="doing" data-sort="priority" onclick="toggleSort('doing','priority')">優先度</button>
+        <button class="sort-btn" data-col="doing" data-sort="due"      onclick="toggleSort('doing','due')">期日</button>
+      </div>
+    </div>
+    <div class="card-list" id="list-doing"></div>
+  </div>
+
+  <!-- 完了：追加ボタンなし -->
+  <div class="column" id="col-done" data-column-id="done">
+    <div class="column-header">
+      <span class="column-title">完了</span>
+      <span class="column-count" id="count-done">0</span>
+      <div class="sort-btns">
+        <button class="sort-btn" data-col="done" data-sort="priority" onclick="toggleSort('done','priority')">優先度</button>
+        <button class="sort-btn" data-col="done" data-sort="due"      onclick="toggleSort('done','due')">期日</button>
+      </div>
+    </div>
+    <div class="card-list" id="list-done"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <h2 id="modal-title">タスクを追加</h2>
+    <div class="form-group">
+      <label>タイトル<span class="required">*</span></label>
+      <input type="text" id="f-title" placeholder="タスクのタイトルを入力">
+      <div class="error-msg" id="err-title">タイトルは必須です</div>
+    </div>
+    <div class="form-group">
+      <label>説明</label>
+      <textarea id="f-desc" placeholder="タスクの詳細（任意）"></textarea>
+    </div>
+    <div class="form-group">
+      <label>期日</label>
+      <input type="date" id="f-due">
+    </div>
+    <div class="form-group">
+      <label>優先度</label>
+      <select id="f-priority">
+        <option value="">-- なし --</option>
+        <option value="high">高</option>
+        <option value="medium">中</option>
+        <option value="low">低</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-save"   onclick="saveCard()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────
+  let nextId = 1;
+  const state = { cards: [] };
+  const sortState = { todo: null, doing: null, done: null }; // null | 'priority' | 'due'
+
+  // ── Seed data ──────────────────────────────────────────
+  const seeds = [
+    { title: 'デザインレビュー依頼',  description: 'UIチームにワイヤーフレームを送付する', dueDate: '2026-06-15', priority: 'high',   columnId: 'todo'  },
+    { title: 'API仕様書を作成',       description: '',                                      dueDate: '2026-06-20', priority: 'medium', columnId: 'todo'  },
+    { title: 'テスト環境構築',        description: 'Dockerを使ってローカル環境を整備',      dueDate: '',           priority: 'low',    columnId: 'todo'  },
+    { title: 'ログイン画面実装',      description: 'バリデーション込み',                    dueDate: '2026-06-10', priority: 'high',   columnId: 'doing' },
+    { title: 'DBスキーマ設計',        description: '',                                      dueDate: '',           priority: '',       columnId: 'doing' },
+    { title: '要件定義書を作成',      description: '',                                      dueDate: '2026-05-30', priority: 'medium', columnId: 'done'  },
+  ];
+  seeds.forEach(s => state.cards.push({ id: nextId++, ...s }));
+
+  // ── Modal state ────────────────────────────────────────
+  let modalMode     = 'add';
+  let modalColumnId = 'todo';
+  let editingId     = null;
+
+  // ── Sort ───────────────────────────────────────────────
+  const PRIORITY_ORDER = { high: 0, medium: 1, low: 2, '': 3 };
+
+  function toggleSort(colId, type) {
+    sortState[colId] = sortState[colId] === type ? null : type;
+    document.querySelectorAll(`.sort-btn[data-col="${colId}"]`).forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.sort === sortState[colId]);
+    });
+    renderColumn(colId);
+  }
+
+  function getSortedCards(colId) {
+    const cards = state.cards.filter(c => c.columnId === colId);
+    const sort  = sortState[colId];
+    if (sort === 'priority') {
+      return [...cards].sort((a, b) =>
+        (PRIORITY_ORDER[a.priority] ?? 3) - (PRIORITY_ORDER[b.priority] ?? 3)
+      );
+    }
+    if (sort === 'due') {
+      return [...cards].sort((a, b) => {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return a.dueDate.localeCompare(b.dueDate);
+      });
+    }
+    return cards;
+  }
+
+  // ── Render ─────────────────────────────────────────────
+  function renderAll() {
+    ['todo', 'doing', 'done'].forEach(renderColumn);
+  }
+
+  function renderColumn(colId) {
+    const list  = document.getElementById('list-' + colId);
+    const count = document.getElementById('count-' + colId);
+    const cards = getSortedCards(colId);
+    count.textContent = cards.length;
+    list.innerHTML = '';
+    cards.forEach(card => list.appendChild(buildCard(card)));
+  }
+
+  function buildCard(card) {
+    const el = document.createElement('div');
+    el.className  = 'card';
+    el.draggable  = true;
+    el.dataset.id = card.id;
+
+    const priorityLabel = { high: '高', medium: '中', low: '低' };
+    const priorityClass = { high: 'badge-high', medium: 'badge-medium', low: 'badge-low' };
+
+    let metaHTML = '';
+    if (card.priority) {
+      metaHTML += `<span class="badge ${priorityClass[card.priority]}">${priorityLabel[card.priority]}</span>`;
+    }
+    if (card.dueDate) {
+      const overdue = new Date(card.dueDate) < new Date(new Date().toDateString());
+      metaHTML += `<span class="due-date${overdue ? ' overdue' : ''}">期日: ${formatDate(card.dueDate)}</span>`;
+    }
+
+    el.innerHTML = `
+      <button class="delete-btn" title="削除" onclick="deleteCard(${card.id}, event)">✕</button>
+      <div class="card-title">${escHtml(card.title)}</div>
+      ${metaHTML ? `<div class="card-meta">${metaHTML}</div>` : ''}
+    `;
+
+    el.addEventListener('click', e => {
+      if (!e.target.classList.contains('delete-btn')) openModal('edit', card.columnId, card.id);
+    });
+
+    el.addEventListener('dragstart', e => {
+      dragId = card.id;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.id);
+      setTimeout(() => el.classList.add('dragging'), 0);
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      removePlaceholder();
+      document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over-col'));
+      dragId = null;
+    });
+
+    return el;
+  }
+
+  // ── Card CRUD ──────────────────────────────────────────
+  function deleteCard(id, e) {
+    e.stopPropagation();
+    state.cards = state.cards.filter(c => c.id !== id);
+    renderAll();
+  }
+
+  function saveCard() {
+    const title = document.getElementById('f-title').value.trim();
+    const errEl = document.getElementById('err-title');
+    if (!title) { errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+
+    const data = {
+      title,
+      description: document.getElementById('f-desc').value.trim(),
+      dueDate:     document.getElementById('f-due').value,
+      priority:    document.getElementById('f-priority').value,
+    };
+
+    if (modalMode === 'add') {
+      state.cards.push({ id: nextId++, columnId: modalColumnId, ...data });
+    } else {
+      const card = state.cards.find(c => c.id === editingId);
+      if (card) Object.assign(card, data);
+    }
+    renderAll();
+    closeModal();
+  }
+
+  // ── Modal ──────────────────────────────────────────────
+  function openModal(mode, columnId, cardId) {
+    modalMode     = mode;
+    modalColumnId = columnId;
+    editingId     = cardId || null;
+
+    document.getElementById('err-title').style.display = 'none';
+    document.getElementById('modal-title').textContent = mode === 'add' ? 'タスクを追加' : 'タスクを編集';
+
+    if (mode === 'edit') {
+      const card = state.cards.find(c => c.id === cardId);
+      document.getElementById('f-title').value    = card.title;
+      document.getElementById('f-desc').value     = card.description;
+      document.getElementById('f-due').value      = card.dueDate;
+      document.getElementById('f-priority').value = card.priority;
+    } else {
+      document.getElementById('f-title').value    = '';
+      document.getElementById('f-desc').value     = '';
+      document.getElementById('f-due').value      = '';
+      document.getElementById('f-priority').value = '';
+    }
+
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('f-title').focus();
+  }
+
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('open');
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('overlay')) closeModal();
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  // ── Drag & Drop（カラム間移動 ＋ カラム内並び替え）────
+  let dragId = null;
+  const placeholder = document.createElement('div');
+  placeholder.className = 'drop-placeholder';
+
+  function removePlaceholder() {
+    if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+  }
+
+  // ドラッグ中のカーソルY座標から「どのカードの前に挿入するか」を返す
+  // 返値: カード要素 or null（末尾）
+  function getInsertBefore(list, clientY) {
+    const cards = [...list.querySelectorAll('.card:not(.dragging)')];
+    for (const card of cards) {
+      const rect = card.getBoundingClientRect();
+      if (clientY < rect.top + rect.height / 2) return card;
+    }
+    return null;
+  }
+
+  document.querySelectorAll('.card-list').forEach(list => {
+    list.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+
+      const insertBefore = getInsertBefore(list, e.clientY);
+      if (insertBefore) {
+        list.insertBefore(placeholder, insertBefore);
+      } else {
+        list.appendChild(placeholder);
+      }
+      list.classList.add('drag-over-col');
+    });
+
+    list.addEventListener('dragleave', e => {
+      if (!list.contains(e.relatedTarget)) {
+        list.classList.remove('drag-over-col');
+        removePlaceholder();
+      }
+    });
+
+    list.addEventListener('drop', e => {
+      e.preventDefault();
+      list.classList.remove('drag-over-col');
+
+      if (dragId === null) return;
+
+      const targetColId   = list.closest('.column').dataset.columnId;
+      const insertBefore  = getInsertBefore(list, e.clientY);
+      const beforeId      = insertBefore ? parseInt(insertBefore.dataset.id) : null;
+
+      applyDrop(dragId, targetColId, beforeId);
+      removePlaceholder();
+    });
+  });
+
+  function applyDrop(movedId, targetColId, beforeId) {
+    const cardIdx = state.cards.findIndex(c => c.id === movedId);
+    if (cardIdx === -1) return;
+
+    const [card] = state.cards.splice(cardIdx, 1);
+    card.columnId = targetColId;
+
+    // ソート中のカラムに手動で並び替えた場合はソートを解除
+    if (sortState[targetColId]) {
+      sortState[targetColId] = null;
+      document.querySelectorAll(`.sort-btn[data-col="${targetColId}"]`).forEach(b => b.classList.remove('active'));
+    }
+
+    if (beforeId === null) {
+      // 末尾：対象カラムの最後のカードの後ろに挿入
+      let lastIdx = -1;
+      state.cards.forEach((c, i) => { if (c.columnId === targetColId) lastIdx = i; });
+      state.cards.splice(lastIdx + 1, 0, card);
+    } else {
+      const beforeIdx = state.cards.findIndex(c => c.id === beforeId);
+      state.cards.splice(beforeIdx === -1 ? state.cards.length : beforeIdx, 0, card);
+    }
+
+    renderAll();
+  }
+
+  // ── Helpers ────────────────────────────────────────────
+  function formatDate(iso) {
+    const d = new Date(iso + 'T00:00:00');
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  }
+
+  function escHtml(str) {
+    return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ── Init ───────────────────────────────────────────────
+  renderAll();
+</script>
+</body>
+</html>
