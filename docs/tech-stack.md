@@ -16,8 +16,8 @@
 
 | 役割 | 技術 | 選定理由 |
 |------|------|----------|
-| 言語 | Java 17 | スクール指定 |
-| フレームワーク | Spring Boot 3.x | スクール指定 |
+| 言語 | Java 25 LTS | スクール指定 |
+| フレームワーク | Spring Boot 4.0 | スクール指定 |
 | REST API | Spring Web | Spring Boot標準、JSONレスポンス |
 | ORM | Spring Data JPA + Hibernate | Spring Boot標準、PostgreSQLとの相性○ |
 | バリデーション | Spring Validation | 入力チェックを宣言的に記述 |
@@ -49,7 +49,7 @@
 
 ```mermaid
 flowchart LR
-    A["ブラウザ\n(React + Vite)"] -- "REST API (JSON)" --> B["Spring Boot\n(Java 17)"]
+    A["ブラウザ\n(React + Vite)"] -- "REST API (JSON)" --> B["Spring Boot 4.0\n(Java 25)"]
     B -- "Spring Data JPA" --> C["PostgreSQL\n(DB)"]
 ```
 
@@ -58,7 +58,7 @@ flowchart LR
 | レイヤー | 技術 | 役割 |
 |----------|------|------|
 | フロントエンド | React 18 + Vite | UIの描画・ユーザー操作の受け付け・APIとの通信 |
-| バックエンド | Java Spring Boot 3.x | RESTful APIの提供・ビジネスロジック |
+| バックエンド | Java 25 + Spring Boot 4.0 | RESTful APIの提供・ビジネスロジック |
 | ORM | Spring Data JPA + Hibernate | Javaオブジェクト↔DBテーブルのマッピング |
 | DBマイグレーション | Flyway | テーブル作成・初期データ投入の自動管理 |
 | データベース | PostgreSQL 15 | タスクデータの永続化 |
