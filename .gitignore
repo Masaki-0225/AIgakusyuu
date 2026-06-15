@@ -17,3 +17,7 @@ backend/build/
 
 # Local test directories
 github-test/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
