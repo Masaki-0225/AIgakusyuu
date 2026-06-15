@@ -19,7 +19,7 @@ export default function Board() {
   const [error, setError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterValue>("all");
 
-  useEffect(() => {
+  function fetchCards() {
     setLoading(true);
     setError(null);
     const status = filterStatus === "all" ? undefined : filterStatus;
@@ -27,6 +27,11 @@ export default function Board() {
       .then(setCards)
       .catch(() => setError("カードの取得に失敗しました"))
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    fetchCards();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterStatus]);
 
   const visibleColumns =
@@ -45,7 +50,10 @@ export default function Board() {
             <Column
               key={key}
               title={label}
+              status={key}
               cards={cards.filter((c) => c.status === key)}
+              boardId={BOARD_ID}
+              onCardCreated={fetchCards}
             />
           ))}
         </div>
