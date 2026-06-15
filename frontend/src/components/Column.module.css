@@ -1,0 +1,38 @@
+.column {
+  background: #edf2f7;
+  border-radius: 8px;
+  width: 280px;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 90px);
+}
+
+.header {
+  padding: 12px 14px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.columnTitle {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #2d3748;
+}
+
+.count {
+  background: #cbd5e0;
+  color: #4a5568;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 1px 7px;
+}
+
+.cardList {
+  padding: 4px 8px 8px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 40px;
+}
