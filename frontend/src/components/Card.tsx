@@ -28,15 +28,14 @@ function getDueDateClass(dueDate: string | null): string {
 }
 
 export default function Card({ card, onClick, onDragStart }: Props) {
-  const isDraggable = true;
   const dueDateClass = getDueDateClass(card.dueDate);
 
   return (
     <div
       className={`${styles.card} ${dueDateClass}`}
       onClick={onClick}
-      draggable={isDraggable}
-      onDragStart={isDraggable ? (e) => { e.dataTransfer.effectAllowed = "move"; onDragStart?.(card.id); } : undefined}
+      draggable
+      onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; onDragStart?.(card.id); }}
     >
       <p className={styles.title}>{card.title}</p>
       <div className={styles.meta}>

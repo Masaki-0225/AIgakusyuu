@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Card, CardStatus } from "../types/card";
 import { getCardsByBoard, updateCardStatus } from "../api/cardApi";
 import Column from "./Column";
@@ -20,22 +20,33 @@ export default function Board() {
   const [error, setError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterValue>("all");
   const [editingCard, setEditingCard] = useState<Card | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const draggingCardId = useRef<number | null>(null);
 
-  function fetchCards() {
-    setLoading(true);
-    setError(null);
-    const status = filterStatus === "all" ? undefined : filterStatus;
-    getCardsByBoard(BOARD_ID, status)
-      .then(setCards)
-      .catch(() => setError("カードの取得に失敗しました"))
-      .finally(() => setLoading(false));
-  }
+  const fetchCards = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
 
   useEffect(() => {
-    fetchCards();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterStatus]);
+    let cancelled = false;
+    const status = filterStatus === "all" ? undefined : filterStatus;
+    getCardsByBoard(BOARD_ID, status)
+      .then((data) => {
+        if (!cancelled) {
+          setCards(data);
+          setError(null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setError("カードの取得に失敗しました");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [filterStatus, refreshKey]);
 
   function handleCardClick(card: Card) {
     setEditingCard(card);
@@ -60,7 +71,7 @@ export default function Board() {
       await updateCardStatus(cardId, targetStatus);
       fetchCards();
     } catch {
-      // ステータス更新失敗時は何もしない（UIは変化しない）
+      // ステータス更新失敗時はUIを変化させない
     }
   }
 
