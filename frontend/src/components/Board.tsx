@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Card, CardStatus } from "../types/card";
-import { getCardsByBoard } from "../api/cardApi";
+import { getCardsByBoard, updateCardStatus } from "../api/cardApi";
 import Column from "./Column";
 import FilterBar, { type FilterValue } from "./FilterBar";
+import CardEditModal from "./CardEditModal";
 import styles from "./Board.module.css";
 
 const BOARD_ID = 1;
@@ -18,6 +19,8 @@ export default function Board() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterValue>("all");
+  const [editingCard, setEditingCard] = useState<Card | null>(null);
+  const draggingCardId = useRef<number | null>(null);
 
   function fetchCards() {
     setLoading(true);
@@ -33,6 +36,33 @@ export default function Board() {
     fetchCards();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterStatus]);
+
+  function handleCardClick(card: Card) {
+    setEditingCard(card);
+  }
+
+  function handleDragStart(cardId: number) {
+    draggingCardId.current = cardId;
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }
+
+  async function handleDrop(targetStatus: CardStatus) {
+    const cardId = draggingCardId.current;
+    draggingCardId.current = null;
+    if (cardId == null) return;
+    const card = cards.find((c) => c.id === cardId);
+    if (!card || card.status === targetStatus) return;
+    try {
+      await updateCardStatus(cardId, targetStatus);
+      fetchCards();
+    } catch {
+      // ステータス更新失敗時は何もしない（UIは変化しない）
+    }
+  }
 
   const visibleColumns =
     filterStatus === "all"
@@ -54,9 +84,20 @@ export default function Board() {
               cards={cards.filter((c) => c.status === key)}
               boardId={BOARD_ID}
               onCardCreated={fetchCards}
+              onCardClick={handleCardClick}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
             />
           ))}
         </div>
+      )}
+      {editingCard && (
+        <CardEditModal
+          card={editingCard}
+          onUpdated={fetchCards}
+          onClose={() => setEditingCard(null)}
+        />
       )}
     </>
   );

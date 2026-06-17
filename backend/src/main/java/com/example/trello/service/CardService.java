@@ -2,6 +2,8 @@ package com.example.trello.service;
 
 import com.example.trello.dto.CardCreateRequest;
 import com.example.trello.dto.CardResponseDto;
+import com.example.trello.dto.CardStatusUpdateRequest;
+import com.example.trello.dto.CardUpdateRequest;
 import com.example.trello.entity.Board;
 import com.example.trello.entity.Card;
 import com.example.trello.repository.BoardRepository;
@@ -10,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -57,6 +60,26 @@ public class CardService {
         card.setStatus("todo");
         card.setOrderIndex(nextIndex);
 
+        return CardResponseDto.from(cardRepository.save(card));
+    }
+
+    @Transactional
+    public CardResponseDto updateCard(Long id, CardUpdateRequest request) {
+        Card card = cardRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Card not found: " + id));
+        card.setTitle(request.getTitle());
+        card.setDescription(request.getDescription());
+        card.setDueDate(request.getDueDate());
+        card.setPriority(request.getPriority());
+        return CardResponseDto.from(cardRepository.save(card));
+    }
+
+    @Transactional
+    public CardResponseDto updateCardStatus(Long id, CardStatusUpdateRequest request) {
+        Card card = cardRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Card not found: " + id));
+        card.setStatus(request.getStatus());
+        card.setCompletedAt("done".equals(request.getStatus()) ? LocalDate.now() : null);
         return CardResponseDto.from(cardRepository.save(card));
     }
 }

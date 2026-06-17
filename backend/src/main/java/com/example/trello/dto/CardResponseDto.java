@@ -16,6 +16,7 @@ public class CardResponseDto {
     private final String priority;
     private final String status;
     private final Integer orderIndex;
+    private final LocalDate completedAt;
 
     private CardResponseDto(Card card) {
         this.id = card.getId();
@@ -26,6 +27,7 @@ public class CardResponseDto {
         this.priority = card.getPriority();
         this.status = card.getStatus();
         this.orderIndex = card.getOrderIndex();
+        this.completedAt = card.getCompletedAt();
     }
 
     public static CardResponseDto from(Card card) {

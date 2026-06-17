@@ -39,4 +39,7 @@ public class Card {
 
     @Column(name = "order_index", nullable = false)
     private Integer orderIndex;
+
+    @Column(name = "completed_at")
+    private LocalDate completedAt;
 }

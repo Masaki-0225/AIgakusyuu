@@ -2,6 +2,8 @@ package com.example.trello.controller;
 
 import com.example.trello.dto.CardCreateRequest;
 import com.example.trello.dto.CardResponseDto;
+import com.example.trello.dto.CardStatusUpdateRequest;
+import com.example.trello.dto.CardUpdateRequest;
 import com.example.trello.service.CardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -37,5 +39,19 @@ public class CardController {
             @PathVariable Long boardId,
             @RequestBody CardCreateRequest request) {
         return cardService.createCard(boardId, request);
+    }
+
+    @PutMapping("/cards/{id}")
+    public CardResponseDto updateCard(
+            @PathVariable Long id,
+            @RequestBody CardUpdateRequest request) {
+        return cardService.updateCard(id, request);
+    }
+
+    @PatchMapping("/cards/{id}/status")
+    public CardResponseDto updateCardStatus(
+            @PathVariable Long id,
+            @RequestBody CardStatusUpdateRequest request) {
+        return cardService.updateCardStatus(id, request);
     }
 }

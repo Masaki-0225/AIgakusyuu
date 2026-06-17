@@ -10,10 +10,25 @@ type Props = {
   cards: CardType[];
   boardId: number;
   onCardCreated: () => void;
+  onCardClick: (card: CardType) => void;
+  onDragStart: (cardId: number) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (targetStatus: CardStatus) => void;
 };
 
-export default function Column({ title, status, cards, boardId, onCardCreated }: Props) {
+export default function Column({
+  title,
+  status,
+  cards,
+  boardId,
+  onCardCreated,
+  onCardClick,
+  onDragStart,
+  onDragOver,
+  onDrop,
+}: Props) {
   const [showModal, setShowModal] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   return (
     <div className={styles.column}>
@@ -30,9 +45,27 @@ export default function Column({ title, status, cards, boardId, onCardCreated }:
           </button>
         )}
       </div>
-      <div className={styles.cardList}>
+      <div
+        className={`${styles.cardList} ${isDragOver ? styles.dragOver : ""}`}
+        onDragOver={onDragOver}
+        onDragEnter={() => setIsDragOver(true)}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setIsDragOver(false);
+          }
+        }}
+        onDrop={() => {
+          setIsDragOver(false);
+          onDrop(status);
+        }}
+      >
         {cards.map((card) => (
-          <Card key={card.id} card={card} />
+          <Card
+            key={card.id}
+            card={card}
+            onClick={() => onCardClick(card)}
+            onDragStart={onDragStart}
+          />
         ))}
       </div>
       {showModal && (

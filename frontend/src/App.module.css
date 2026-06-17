@@ -14,6 +14,16 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.today {
+  font-size: 0.95rem;
+  font-weight: 400;
+  opacity: 0.85;
+  letter-spacing: 0.03em;
 }
 
 .main {
