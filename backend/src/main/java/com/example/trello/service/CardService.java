@@ -82,4 +82,11 @@ public class CardService {
         card.setCompletedAt("done".equals(request.getStatus()) ? LocalDate.now() : null);
         return CardResponseDto.from(cardRepository.save(card));
     }
+
+    @Transactional
+    public void deleteCard(Long id) {
+        Card card = cardRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Card not found: " + id));
+        cardRepository.delete(card);
+    }
 }

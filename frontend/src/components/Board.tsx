@@ -97,6 +97,10 @@ export default function Board() {
           card={editingCard}
           onUpdated={fetchCards}
           onClose={() => setEditingCard(null)}
+          onDeleted={() => {
+            setEditingCard(null);
+            fetchCards();
+          }}
         />
       )}
     </>

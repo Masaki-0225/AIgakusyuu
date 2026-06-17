@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { updateCard } from "../api/cardApi";
+import { updateCard, deleteCard } from "../api/cardApi";
 import type { Card } from "../types/card";
 import styles from "./CardCreateModal.module.css";
 
@@ -7,14 +7,16 @@ type Props = {
   card: Card;
   onUpdated: () => void;
   onClose: () => void;
+  onDeleted: () => void;
 };
 
-export default function CardEditModal({ card, onUpdated, onClose }: Props) {
+export default function CardEditModal({ card, onUpdated, onClose, onDeleted }: Props) {
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description ?? "");
   const [dueDate, setDueDate] = useState(card.dueDate ?? "");
   const [priority, setPriority] = useState(card.priority ?? "");
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -38,6 +40,21 @@ export default function CardEditModal({ card, onUpdated, onClose }: Props) {
     }
   }
 
+  async function handleDelete() {
+    if (!window.confirm("このカードを削除しますか？")) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      await deleteCard(card.id);
+      onDeleted();
+      onClose();
+    } catch {
+      setError("削除に失敗しました。もう一度お試しください。");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onClose();
   }
@@ -45,7 +62,18 @@ export default function CardEditModal({ card, onUpdated, onClose }: Props) {
   return (
     <div className={styles.backdrop} onClick={handleBackdropClick}>
       <div className={styles.modal}>
-        <h2 className={styles.modalTitle}>カードを編集</h2>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>カードを編集</h2>
+          <button
+            type="button"
+            className={styles.deleteBtn}
+            onClick={handleDelete}
+            disabled={deleting || submitting}
+            title="カードを削除"
+          >
+            🗑️
+          </button>
+        </div>
         <form onSubmit={handleSubmit} className={styles.form}>
           <label className={styles.label}>
             タイトル <span className={styles.required}>*</span>
