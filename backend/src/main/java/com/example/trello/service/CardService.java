@@ -9,8 +9,10 @@ import com.example.trello.entity.Card;
 import com.example.trello.repository.BoardRepository;
 import com.example.trello.repository.CardRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -40,13 +42,13 @@ public class CardService {
     public CardResponseDto findById(Long id) {
         return cardRepository.findById(id)
                 .map(CardResponseDto::from)
-                .orElseThrow(() -> new IllegalArgumentException("Card not found: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Card not found: " + id));
     }
 
     @Transactional
     public CardResponseDto createCard(Long boardId, CardCreateRequest request) {
         Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new IllegalArgumentException("Board not found: " + boardId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Board not found: " + boardId));
 
         List<Card> existing = cardRepository.findByBoardIdAndStatusOrderByOrderIndexAsc(boardId, "todo");
         int nextIndex = existing.isEmpty() ? 0 : existing.getLast().getOrderIndex() + 1;
@@ -66,7 +68,7 @@ public class CardService {
     @Transactional
     public CardResponseDto updateCard(Long id, CardUpdateRequest request) {
         Card card = cardRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Card not found: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Card not found: " + id));
         card.setTitle(request.getTitle());
         card.setDescription(request.getDescription());
         card.setDueDate(request.getDueDate());
@@ -77,7 +79,7 @@ public class CardService {
     @Transactional
     public CardResponseDto updateCardStatus(Long id, CardStatusUpdateRequest request) {
         Card card = cardRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Card not found: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Card not found: " + id));
         card.setStatus(request.getStatus());
         card.setCompletedAt("done".equals(request.getStatus()) ? LocalDate.now() : null);
         return CardResponseDto.from(cardRepository.save(card));
@@ -86,7 +88,7 @@ public class CardService {
     @Transactional
     public void deleteCard(Long id) {
         Card card = cardRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Card not found: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Card not found: " + id));
         cardRepository.delete(card);
     }
 }
