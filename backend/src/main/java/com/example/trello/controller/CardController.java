@@ -5,6 +5,7 @@ import com.example.trello.dto.CardResponseDto;
 import com.example.trello.dto.CardStatusUpdateRequest;
 import com.example.trello.dto.CardUpdateRequest;
 import com.example.trello.service.CardService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -37,14 +38,14 @@ public class CardController {
     @ResponseStatus(HttpStatus.CREATED)
     public CardResponseDto createCard(
             @PathVariable Long boardId,
-            @RequestBody CardCreateRequest request) {
+            @Valid @RequestBody CardCreateRequest request) {
         return cardService.createCard(boardId, request);
     }
 
     @PutMapping("/cards/{id}")
     public CardResponseDto updateCard(
             @PathVariable Long id,
-            @RequestBody CardUpdateRequest request) {
+            @Valid @RequestBody CardUpdateRequest request) {
         return cardService.updateCard(id, request);
     }
 
