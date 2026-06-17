@@ -4,27 +4,22 @@
 
 ```mermaid
 erDiagram
-    BOARD ||--o{ COLUMN : has
-    COLUMN ||--o{ CARD : contains
+    BOARD ||--o{ CARD : has
 
     BOARD {
         int id PK
         string name
     }
-    COLUMN {
-        int id PK
-        int board_id FK
-        string name
-        int order_index
-    }
     CARD {
         int id PK
-        int column_id FK
+        int board_id FK
         string title
         string description
         date due_date
         string priority
+        string status
         int order_index
+        date completed_at
     }
 ```
 
@@ -36,29 +31,22 @@ erDiagram
 
 | カラム名 | 型 | 制約 | 説明 |
 |----------|----|------|------|
-| id | INTEGER | PK, AUTO INCREMENT | ボードID |
+| id | BIGSERIAL | PK | ボードID |
 | name | TEXT | NOT NULL | ボード名 |
-
-### columns テーブル
-
-| カラム名 | 型 | 制約 | 説明 |
-|----------|----|------|------|
-| id | INTEGER | PK, AUTO INCREMENT | 列ID |
-| board_id | INTEGER | FK → boards.id | 所属ボードID |
-| name | TEXT | NOT NULL | 列名（未着手 / 進行中 / 完了） |
-| order_index | INTEGER | NOT NULL | 列の表示順 |
 
 ### cards テーブル
 
 | カラム名 | 型 | 制約 | 説明 |
 |----------|----|------|------|
-| id | INTEGER | PK, AUTO INCREMENT | カードID |
-| column_id | INTEGER | FK → columns.id | 所属列ID |
+| id | BIGSERIAL | PK | カードID |
+| board_id | BIGINT | FK → boards.id, NOT NULL | 所属ボードID |
 | title | TEXT | NOT NULL | タスクのタイトル |
 | description | TEXT | | 説明文（任意） |
 | due_date | DATE | | 期限日（任意） |
-| priority | TEXT | | 優先度：high / medium / low（任意） |
+| priority | TEXT | | 優先度：高 / 中 / 低（任意） |
+| status | TEXT | NOT NULL, CHECK IN ('todo','in_progress','done') | カードの状態 |
 | order_index | INTEGER | NOT NULL | 列内での表示順 |
+| completed_at | DATE | | ステータスが done になった日付 |
 
 ---
 
@@ -66,7 +54,9 @@ erDiagram
 
 - データベースエンジンは PostgreSQL 15 を使用する
 - マイグレーションは Flyway で管理し、Spring Boot 起動時に自動実行される
-  - `V1__create_tables.sql`: boards / columns / cards テーブル作成
-  - `V2__insert_initial_data.sql`: board 1件・column 3件（未着手/進行中/完了）の初期データ投入
-- 初期データ挿入後は boards・columns テーブルは追加・変更しない前提（固定3列）
-- 詳細なインデックス設計は実装フェーズで定義する
+  - `V1__create_tables.sql`: boards / cards テーブル作成
+  - `V2__insert_initial_data.sql`: board 1件の初期データ投入
+  - `V3__insert_test_cards.sql`: 確認用テストカードの投入
+  - `V4__add_completed_at_to_cards.sql`: cards テーブルに completed_at カラムを追加
+- 列（未着手/進行中/完了）は `cards.status` の値で区別する。`columns` テーブルは存在しない
+- インデックス: `idx_cards_board_id`（board_id）、`idx_cards_status`（status）
