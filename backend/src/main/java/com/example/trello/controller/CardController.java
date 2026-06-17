@@ -54,4 +54,10 @@ public class CardController {
             @RequestBody CardStatusUpdateRequest request) {
         return cardService.updateCardStatus(id, request);
     }
+
+    @DeleteMapping("/cards/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCard(@PathVariable Long id) {
+        cardService.deleteCard(id);
+    }
 }

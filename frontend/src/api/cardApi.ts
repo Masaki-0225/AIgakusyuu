@@ -30,3 +30,7 @@ export async function updateCardStatus(
   const { data } = await axios.patch<Card>(`/api/cards/${cardId}/status`, { status });
   return data;
 }
+
+export async function deleteCard(cardId: number): Promise<void> {
+  await axios.delete(`/api/cards/${cardId}`);
+}
