@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { updateCard, deleteCard } from "../api/cardApi";
 import type { Card } from "../types/card";
-import styles from "./CardCreateModal.module.css";
+import styles from "./CardEditModal.module.css";
 
 type Props = {
   card: Card;
