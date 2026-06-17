@@ -15,11 +15,29 @@ const PRIORITY_CLASS: Record<string, string> = {
 
 type Props = {
   card: CardType;
+  onClick?: () => void;
+  onDragStart?: (cardId: number) => void;
 };
 
-export default function Card({ card }: Props) {
+function getDueDateClass(dueDate: string | null): string {
+  if (!dueDate) return "";
+  const today = new Date().toISOString().slice(0, 10);
+  if (dueDate < today) return styles.overdue;
+  if (dueDate === today) return styles.dueToday;
+  return "";
+}
+
+export default function Card({ card, onClick, onDragStart }: Props) {
+  const isDraggable = true;
+  const dueDateClass = getDueDateClass(card.dueDate);
+
   return (
-    <div className={styles.card}>
+    <div
+      className={`${styles.card} ${dueDateClass}`}
+      onClick={onClick}
+      draggable={isDraggable}
+      onDragStart={isDraggable ? (e) => { e.dataTransfer.effectAllowed = "move"; onDragStart?.(card.id); } : undefined}
+    >
       <p className={styles.title}>{card.title}</p>
       <div className={styles.meta}>
         {card.priority && (
@@ -29,6 +47,9 @@ export default function Card({ card }: Props) {
         )}
         {card.dueDate && (
           <span className={styles.dueDate}>期限: {card.dueDate}</span>
+        )}
+        {card.completedAt && (
+          <span className={styles.completedAt}>完了: {card.completedAt}</span>
         )}
       </div>
     </div>

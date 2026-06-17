@@ -11,6 +11,22 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
+.overdue {
+  background: #fed7d7;
+}
+
+.overdue:hover {
+  background: #feb2b2;
+}
+
+.dueToday {
+  background: #fefcbf;
+}
+
+.dueToday:hover {
+  background: #faf089;
+}
+
 .title {
   font-size: 0.9rem;
   font-weight: 600;
@@ -48,4 +64,10 @@
 .dueDate {
   font-size: 0.72rem;
   color: #718096;
+}
+
+.completedAt {
+  font-size: 0.72rem;
+  color: #38a169;
+  font-weight: 600;
 }

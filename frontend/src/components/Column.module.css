@@ -54,3 +54,8 @@
   overflow-y: auto;
   min-height: 40px;
 }
+
+.dragOver {
+  background: #bee3f8;
+  border-radius: 6px;
+}

@@ -9,4 +9,5 @@ export type Card = {
   priority: string | null;
   status: CardStatus;
   orderIndex: number;
+  completedAt: string | null;
 };
